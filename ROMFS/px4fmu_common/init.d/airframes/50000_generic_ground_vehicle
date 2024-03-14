@@ -54,3 +54,9 @@ param set-default PWM_MAIN_FUNC1 201
 param set-default PWM_MAIN_FUNC2 201
 param set-default PWM_MAIN_FUNC6 101
 param set-default PWM_MAIN_FUNC7 101
+
+# Start monitoring module
+monitoring start
+
+# Start piksi driver
+piksi_rtk start

@@ -1,0 +1,5 @@
+menuconfig DRIVERS_PIKSI_RTK
+	bool "piksi_rtk"
+	default n
+	---help---
+		Enable support for XXX

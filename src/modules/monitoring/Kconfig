@@ -1,0 +1,5 @@
+menuconfig MODULES_MONITORING
+	bool "monitoring"
+	default n
+	---help---
+		Enable support for monitoring

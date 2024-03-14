@@ -1,0 +1,623 @@
+# Copyright (C) 2015 Swift Navigation Inc.
+# Contact: Fergus Noble <fergus@swiftnav.com>
+#
+# This source is subject to the license found in the file 'LICENSE' which must
+# be be distributed together with this source. All other rights reserved.
+#
+# THIS CODE AND INFORMATION IS PROVIDED "AS IS" WITHOUT WARRANTY OF ANY KIND,
+# EITHER EXPRESSED OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE IMPLIED
+# WARRANTIES OF MERCHANTABILITY AND/OR FITNESS FOR A PARTICULAR PURPOSE.
+
+package: swiftnav.sbp.piksi
+description: |
+  System health, configuration, and diagnostic messages specific to
+  the Piksi L1 receiver, including a variety of legacy messages that
+  may no longer be used.
+
+stable: False
+public: True
+include:
+  - types.yaml
+  - gnss.yaml
+definitions:
+
+ - MSG_ALMANAC:
+    id: 0x0069
+    short_desc: Legacy message to load satellite almanac (host => Piksi)
+    desc: |
+      This is a legacy message for sending and loading a satellite
+      alamanac onto the Piksi's flash memory from the host.
+
+ - MSG_SET_TIME:
+    id: 0x0068
+    short_desc: Send GPS time from host (host => Piksi)
+    desc: |
+      This message sets up timing functionality using a coarse GPS
+      time estimate sent by the host.
+
+ - MSG_RESET:
+    id: 0x00B6
+    short_desc: Reset the device (host => Piksi)
+    desc: |
+      This message from the host resets the Piksi back into the
+      bootloader.
+    fields:
+      - flags:
+          type: u32
+          desc: Reset flags
+          fields:
+            - 1-31:
+                desc: Reserved
+            - 0:
+                desc: Default settings.
+                values:
+                  - 0: Preserve existing settings.
+                  - 1: Resore default settings.
+
+ - MSG_RESET_DEP:
+    id: 0x00B2
+    short_desc: Reset the device (host => Piksi)
+    desc: |
+      This message from the host resets the Piksi back into the
+      bootloader.
+
+ - MSG_CW_RESULTS:
+    id: 0x00C0
+    short_desc: Legacy message for CW interference channel (Piksi => host)
+    desc: |
+      This is an unused legacy message for result reporting from the
+      CW interference channel on the SwiftNAP. This message will be
+      removed in a future release.
+
+ - MSG_CW_START:
+    id: 0x00C1
+    short_desc: Legacy message for CW interference channel (host => Piksi)
+    desc: |
+      This is an unused legacy message from the host for starting
+      the CW interference channel on the SwiftNAP. This message will
+      be removed in a future release.
+
+ - MSG_RESET_FILTERS:
+    id: 0x0022
+    short_desc: Reset IAR filters (host => Piksi)
+    desc: |
+      This message resets either the DGNSS Kalman filters or Integer
+      Ambiguity Resolution (IAR) process.
+    fields:
+      - filter:
+          type: u8
+          desc: Filter flags
+          fields:
+            - 2-7:
+                desc: Reserved
+            - 0-1:
+                desc: Filter or process to reset
+                values:
+                  - 0: DGNSS filter
+                  - 1: IAR process
+                  - 2: Inertial filter 
+
+ - MSG_INIT_BASE:
+    id: 0x0023
+    short_desc: Initialize IAR from known baseline (host => device)
+    desc: |
+      This message initializes the integer ambiguity resolution (IAR)
+      process on the Piksi to use an assumed baseline position between
+      the base station and rover receivers. Warns via MSG_PRINT if
+      there aren't a shared minimum number (4) of satellite
+      observations between the two.
+
+ - MSG_THREAD_STATE:
+    id: 0x0017
+    short_desc: State of an RTOS thread
+    desc: |
+      The thread usage message from the device reports real-time
+      operating system (RTOS) thread usage statistics for the named
+      thread. The reported percentage values must be normalized.
+    fields:
+        - name:
+            type: string
+            size: 20
+            desc: Thread name (NULL terminated)
+        - cpu:
+            type: u16
+            desc: |
+              Percentage cpu use for this thread. Values range from 0
+              - 1000 and needs to be renormalized to 100
+        - stack_free:
+            type: u32
+            units: bytes
+            desc: Free stack space for this thread
+
+ - UARTChannel:
+    short_desc: State of the UART channel
+    desc: |
+      Throughput, utilization, and error counts on the RX/TX buffers
+      of this UART channel. The reported percentage values must
+      be normalized.
+    fields:
+        - tx_throughput:
+            type: float
+            units: kB/s
+            desc: UART transmit throughput
+        - rx_throughput:
+            type: float
+            units: kB/s
+            desc: UART receive throughput
+        - crc_error_count:
+            type: u16
+            desc: UART CRC error count
+        - io_error_count:
+            type: u16
+            desc: UART IO error count
+        - tx_buffer_level:
+            type: u8
+            desc: |
+              UART transmit buffer percentage utilization (ranges from
+              0 to 255)
+        - rx_buffer_level:
+            type: u8
+            desc: |
+              UART receive buffer percentage utilization (ranges from
+              0 to 255)
+ - Period:
+    short_desc: base station observation message receipt period
+    desc: |
+      Statistics on the period of observations received from the base
+      station. As complete observation sets are received, their time
+      of reception is compared with the prior set''s time of reception.
+      This measurement provides a proxy for link quality as incomplete
+      or missing sets will increase the period.  Long periods
+      can cause momentary RTK solution outages.
+    fields:
+        - avg:
+            type: s32
+            units: ms
+            desc: Average period
+        - pmin:
+            type: s32
+            units: ms
+            desc: Minimum period
+        - pmax:
+            type: s32
+            units: ms
+            desc: Maximum period
+        - current:
+            type: s32
+            units: ms
+            desc: Smoothed estimate of the current period
+
+ - Latency:
+    short_desc: Receiver-to-base station latency
+    desc: |
+      Statistics on the latency of observations received from the base
+      station. As observation packets are received their GPS time is
+      compared to the current GPS time calculated locally by the
+      receiver to give a precise measurement of the end-to-end
+      communication latency in the system.
+    fields:
+        - avg:
+            type: s32
+            units: ms
+            desc: Average latency
+        - lmin:
+            type: s32
+            units: ms
+            desc: Minimum latency
+        - lmax:
+            type: s32
+            units: ms
+            desc: Maximum latency
+        - current:
+            type: s32
+            units: ms
+            desc: Smoothed estimate of the current latency
+
+ - MSG_UART_STATE:
+    id: 0x001D
+    short_desc: State of the UART channels
+    desc: |
+      The UART message reports data latency and throughput of the UART
+      channels providing SBP I/O. On the default Piksi configuration,
+      UARTs A and B are used for telemetry radios, but can also be
+      host access ports for embedded hosts, or other interfaces in
+      future. The reported percentage values must be normalized.
+      Observations latency and period can be used to assess the
+      health of the differential corrections link. Latency provides
+      the timeliness of received base observations while the
+      period indicates their likelihood of transmission.
+    fields:
+        - uart_a:
+            type: UARTChannel
+            desc: State of UART A
+        - uart_b:
+            type: UARTChannel
+            desc: State of UART B
+        - uart_ftdi:
+            type: UARTChannel
+            desc: State of UART FTDI (USB logger)
+        - latency:
+            type: Latency
+            desc: UART communication latency
+        - obs_period:
+            type: Period
+            desc: Observation receipt period
+
+
+ - MSG_UART_STATE_DEPA:
+    id: 0x0018
+    short_desc: Deprecated
+    desc: Deprecated
+    fields:
+        - uart_a:
+            type: UARTChannel
+            desc: State of UART A
+        - uart_b:
+            type: UARTChannel
+            desc: State of UART B
+        - uart_ftdi:
+            type: UARTChannel
+            desc: State of UART FTDI (USB logger)
+        - latency:
+            type: Latency
+            desc: UART communication latency
+
+ - MSG_IAR_STATE:
+    id: 0x0019
+    short_desc: State of the Integer Ambiguity Resolution (IAR) process
+    desc: |
+      This message reports the state of the Integer Ambiguity
+      Resolution (IAR) process, which resolves unknown integer
+      ambiguities from double-differenced carrier-phase measurements
+      from satellite observations.
+    fields:
+        - num_hyps:
+            type: u32
+            desc: Number of integer ambiguity hypotheses remaining
+
+ - MSG_MASK_SATELLITE:
+    id: 0x002B
+    short_desc: Mask a satellite from use in Piksi subsystems
+    desc: |
+      This message allows setting a mask to prevent a particular satellite
+      from being used in various Piksi subsystems.
+    fields:
+        - mask:
+            type: u8
+            desc: Mask of systems that should ignore this satellite.
+            fields:
+                - 2-7:
+                    desc: Reserved
+                - 1:
+                    desc: Tracking channels
+                    values:
+                        - 0: Enabled
+                        - 1: Drop this PRN if currently tracking
+                - 0:
+                    desc: Acquisition channel
+                    values:
+                        - 0: Enabled
+                        - 1: Skip this satellite on future acquisitions
+        - sid:
+            type: GnssSignal
+            desc: GNSS signal for which the mask is applied
+
+ - MSG_MASK_SATELLITE_DEP:
+    id: 0x001B
+    short_desc: Deprecated
+    desc: Deprecated.
+    public: False
+    replaced_by:
+      - MSG_MASK_SATELLITE
+    fields:
+        - mask:
+            type: u8
+            desc: Mask of systems that should ignore this satellite.
+            fields:
+                - 2-7:
+                    desc: Reserved
+                - 1:
+                    desc: Tracking channels
+                    values:
+                        - 0: Enabled
+                        - 1: Drop this PRN if currently tracking
+                - 0:
+                    desc: Acquisition channel
+                    values:
+                        - 0: Enabled
+                        - 1: Skip this satellite on future acquisitions
+        - sid:
+            type: GnssSignalDep
+            desc: GNSS signal for which the mask is applied
+
+ - MSG_DEVICE_MONITOR:
+    id: 0x00B5
+    short_desc: Device temperature and voltage levels
+    desc: |
+      This message contains temperature and voltage level measurements from the
+      processor's monitoring system and the RF frontend die temperature if
+      available.
+    fields:
+        - dev_vin:
+            type: s16
+            units: V / 1000
+            desc: Device V_in
+        - cpu_vint:
+            type: s16
+            units: V / 1000
+            desc: Processor V_int
+        - cpu_vaux:
+            type: s16
+            units: V / 1000
+            desc: Processor V_aux
+        - cpu_temperature:
+            type: s16
+            units: degrees C / 100
+            desc: Processor temperature
+        - fe_temperature:
+            type: s16
+            units: degrees C / 100
+            desc: Frontend temperature (if available)
+
+ - MSG_COMMAND_REQ:
+    id: 0x00B8
+    short_desc: Execute a command (host => device)
+    desc: |
+      Request the recipient to execute an command.
+      Output will be sent in MSG_LOG messages, and the exit
+      code will be returned with MSG_COMMAND_RESP.
+    fields:
+      - sequence:
+          type: u32
+          desc: Sequence number
+      - command:
+          type: string
+          desc: Command line to execute
+
+ - MSG_COMMAND_RESP:
+    id: 0x00B9
+    short_desc: Exit code from executed command (device => host)
+    desc: |
+      The response to MSG_COMMAND_REQ with the return code of
+      the command.  A return code of zero indicates success.
+    fields:
+      - sequence:
+          type: u32
+          desc: Sequence number
+      - code:
+          type: s32
+          desc: Exit code
+
+ - MSG_COMMAND_OUTPUT:
+    id: 0x00BC
+    short_desc: Command output
+    desc: |
+      Returns the standard output and standard error of the
+      command requested by MSG_COMMAND_REQ.
+      The sequence number can be used to filter for filtering
+      the correct command.
+    fields:
+      - sequence:
+          type: u32
+          desc: Sequence number
+      - line:
+          type: string
+          desc: Line of standard output or standard error
+
+ - MSG_NETWORK_STATE_REQ:
+    id: 0x00BA
+    short_desc: Request state of Piksi network interfaces
+    desc: |
+      Request state of Piksi network interfaces.
+      Output will be sent in MSG_NETWORK_STATE_RESP messages
+
+ - MSG_NETWORK_STATE_RESP:
+    id: 0x00BB
+    short_desc: State of network interface
+    desc: |
+      The state of a network interface on the Piksi.
+      Data is made to reflect output of ifaddrs struct returned by getifaddrs
+      in c.
+    fields:
+      - ipv4_address:
+          type: array
+          size: 4
+          fill: u8
+          desc: IPv4 address (all zero when unavailable)
+      - ipv4_mask_size:
+          type: u8
+          desc: IPv4 netmask CIDR notation
+      - ipv6_address:
+          type: array
+          size: 16
+          fill: u8
+          desc: IPv6 address (all zero when unavailable)
+      - ipv6_mask_size:
+          type: u8
+          desc: IPv6 netmask CIDR notation
+      - rx_bytes:
+          type: u32
+          desc: Number of Rx bytes
+      - tx_bytes:
+          type: u32
+          desc: Number of Tx bytes
+      - interface_name:
+          type: string
+          size: 16
+          desc: Interface Name
+      - flags:
+          type: u32
+          desc: Interface flags from SIOCGIFFLAGS
+          fields:
+            - 16-31:
+                desc: Reserved
+            - 15:
+                desc: IFF_MULTICAST - supports multicast
+            - 14:
+                desc: IFF_LINK2 - per link layer defined bit
+            - 13:
+                desc: IFF_LINK1 - per link layer defined bit
+            - 12:
+                desc: IFF_LINK0 - per link layer defined bit
+            - 11:
+                desc: IFF_SIMPLEX - can't hear own transmissions
+            - 10:
+                desc: IFF_OACTIVE - transmission in progress
+            - 9:
+                desc: IFF_ALLMULTI - receive all multicast packets
+            - 8:
+                desc: IFF_PROMISC - receive all packets
+            - 7:
+                desc: IFF_NOARP - no address resolution protocol
+            - 6:
+                desc: IFF_RUNNING - resources allocated
+            - 5:
+                desc: IFF_NOTRAILERS - avoid use of trailers
+            - 4:
+                desc: IFF_POINTOPOINT - interface is point-to-point link
+            - 3:
+                desc: IFF_LOOPBACK - is a loopback net
+            - 2:
+                desc: IFF_DEBUG - broadcast address valid
+            - 1:
+                desc: IFF_BROADCAST - broadcast address valid
+            - 0:
+                desc: IFF_UP - interface is up
+
+ - NetworkUsage:
+    short_desc: Bandwidth usage measurement for a single interface.
+    desc: |
+      The bandwidth usage for each interface can be reported
+      within this struct and utilize multiple fields to fully
+      specify the type of traffic that is being tracked. As
+      either the interval of collection or the collection time
+      may vary, both a timestamp and period field is provided,
+      though may not necessarily be populated with a value. 
+    fields:
+      - duration:
+          type: u64
+          units: ms
+          desc: Duration over which the measurement was collected
+      - total_bytes:
+          type: u64
+          desc: Number of bytes handled in total within period
+      - rx_bytes:
+          type: u32
+          desc: Number of bytes transmitted within period
+      - tx_bytes:
+          type: u32
+          desc: Number of bytes received within period
+      - interface_name:
+          type: string
+          size: 16
+          desc: Interface Name
+
+ - MSG_NETWORK_BANDWIDTH_USAGE:
+    id: 0x00BD
+    short_desc: Bandwidth usage reporting message
+    desc: |
+      The bandwidth usage, a list of usage by interface. 
+    fields:
+        - interfaces:
+            type: array
+            fill: NetworkUsage
+            desc: Usage measurement array
+
+ - MSG_CELL_MODEM_STATUS:
+    id: 0x00BE
+    short_desc: Cell modem information update message
+    desc: |
+      If a cell modem is present on a piksi device, this message
+      will be send periodically to update the host on the status
+      of the modem and its various parameters.
+    fields:
+      - signal_strength:
+          type: s8
+          units: dBm
+          desc: Received cell signal strength in dBm, zero translates to unknown
+      - signal_error_rate:
+          type: float
+          desc: BER as reported by the modem, zero translates to unknown
+      - reserved:
+          type: array
+          fill: u8
+          desc: Unspecified data TBD for this schema
+
+ - MSG_SPECAN_DEP:
+    id: 0x0050
+    short_desc: Deprecated
+    desc: Deprecated.
+    public: False
+    replaced_by:
+      - MSG_SPECAN
+    fields:
+        - channel_tag:
+            type: u16
+            desc: Channel ID
+        - t:
+            type: GPSTimeDep
+            desc: Receiver time of this observation
+        - freq_ref:
+            type: float
+            units: MHz
+            desc: |
+                Reference frequency of this packet
+        - freq_step:
+            type: float
+            units: MHz
+            desc: |
+                Frequency step of points in this packet
+        - amplitude_ref:
+            type: float
+            units: dB
+            desc: |
+                Reference amplitude of this packet
+        - amplitude_unit:
+            type: float
+            units: dB
+            desc: |
+                Amplitude unit value of points in this packet
+        - amplitude_value:
+            type: array
+            fill: u8
+            desc: |
+                Amplitude values (in the above units) of points in this packet
+
+ - MSG_SPECAN:
+    id: 0x0051
+    short_desc: Spectrum analyzer
+    desc: |
+        Spectrum analyzer packet.
+
+    fields:
+        - channel_tag:
+            type: u16
+            desc: Channel ID
+        - t:
+            type: GPSTime
+            desc: Receiver time of this observation
+        - freq_ref:
+            type: float
+            units: MHz
+            desc: |
+                Reference frequency of this packet
+        - freq_step:
+            type: float
+            units: MHz
+            desc: |
+                Frequency step of points in this packet
+        - amplitude_ref:
+            type: float
+            units: dB
+            desc: |
+                Reference amplitude of this packet
+        - amplitude_unit:
+            type: float
+            units: dB
+            desc: |
+                Amplitude unit value of points in this packet
+        - amplitude_value:
+            type: array
+            fill: u8
+            desc: |
+                Amplitude values (in the above units) of points in this packet

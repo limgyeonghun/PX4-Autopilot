@@ -127,6 +127,7 @@ set(msg_files
 	MissionResult.msg
 	MountOrientation.msg
 	ModeCompleted.msg
+	Monitoring.msg
 	NavigatorMissionItem.msg
 	NormalizedUnsignedSetpoint.msg
 	NpfgStatus.msg
@@ -139,6 +140,8 @@ set(msg_files
 	OrbTestMedium.msg
 	ParameterUpdate.msg
 	Ping.msg
+	PiksiData.msg
+	PiksiRtk.msg
 	PositionControllerLandingStatus.msg
 	PositionControllerStatus.msg
 	PositionSetpoint.msg
