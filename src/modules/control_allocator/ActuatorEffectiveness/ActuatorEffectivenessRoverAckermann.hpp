@@ -34,11 +34,12 @@
 #pragma once
 
 #include "ActuatorEffectiveness.hpp"
+#include "ActuatorEffectivenessControlSurfaces.hpp"
 
-class ActuatorEffectivenessRoverAckermann : public ActuatorEffectiveness
+class ActuatorEffectivenessRoverAckermann : public ModuleParams, public ActuatorEffectiveness
 {
 public:
-	ActuatorEffectivenessRoverAckermann() = default;
+	ActuatorEffectivenessRoverAckermann(ModuleParams *parent);
 	virtual ~ActuatorEffectivenessRoverAckermann() = default;
 
 	bool getEffectivenessMatrix(Configuration &configuration, EffectivenessUpdateReason external_update) override;
@@ -49,5 +50,7 @@ public:
 
 	const char *name() const override { return "Rover (Ackermann)"; }
 private:
+	ActuatorEffectivenessControlSurfaces _control_surfaces;
+
 	uint32_t _motors_mask{};
 };

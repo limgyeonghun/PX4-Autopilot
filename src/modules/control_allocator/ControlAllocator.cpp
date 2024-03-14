@@ -235,7 +235,7 @@ ControlAllocator::update_effectiveness_source()
 			break;
 
 		case EffectivenessSource::ROVER_ACKERMANN:
-			tmp = new ActuatorEffectivenessRoverAckermann();
+			tmp = new ActuatorEffectivenessRoverAckermann(this);
 			break;
 
 		case EffectivenessSource::ROVER_DIFFERENTIAL:

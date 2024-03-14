@@ -680,7 +680,7 @@ mixer:
             16: # Steering Wheel
               - { 'hidden': True, 'default': 0.0 } # roll
               - { 'hidden': True, 'default': 0.0 } # pitch
-              - { 'hidden': True, 'default': 0.0 } # yaw
+              - { 'hidden': False, 'default': 0.0 } # yaw
               - { 'hidden': True, 'min': -1.0, 'max': 1.0, 'default': 0} # flap
               - { 'hidden': True, 'min': -1.0, 'max': 1.0, 'default': 0} # spoiler
             17: # Left Spoiler
@@ -949,9 +949,26 @@ mixer:
                       - name: 'Throttle'
                         position: [ -1., 0, 0 ]
                   - actuator_type: 'servo'
-                    instances:
-                      - name: 'Steering'
-                        position: [ 1., 0, 0 ]
+                    group_label: 'Control Surfaces'
+                    count: 'CA_SV_CS_COUNT'
+                    item_label_prefix: 'Surface ${i}'
+                    per_item_parameters:
+                        extra:
+                          - name: 'CA_SV_CS${i}_TYPE'
+                            label: 'Type'
+                            function: 'type'
+                            identifier: 'servo-type'
+                          - name: 'CA_SV_CS${i}_TRIM'
+                            label: 'Trim'
+                          - name: 'CA_SV_CS${i}_TRQ_R'
+                            label: 'Roll Scale'
+                            identifier: 'servo-torque-roll'
+                          - name: 'CA_SV_CS${i}_TRQ_P'
+                            label: 'Pitch Scale'
+                            identifier: 'servo-torque-pitch'
+                          - name: 'CA_SV_CS${i}_TRQ_Y'
+                            label: 'Yaw Scale'
+                            identifier: 'servo-torque-yaw'
 
             6: # Rover (Differential)
                 title: 'Rover (Differential)'

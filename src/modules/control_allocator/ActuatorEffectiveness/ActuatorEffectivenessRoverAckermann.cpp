@@ -36,6 +36,11 @@
 
 using namespace matrix;
 
+ActuatorEffectivenessRoverAckermann::ActuatorEffectivenessRoverAckermann(ModuleParams *parent)
+	: ModuleParams(parent), _control_surfaces(this)
+{
+}
+
 bool
 ActuatorEffectivenessRoverAckermann::getEffectivenessMatrix(Configuration &configuration,
 		EffectivenessUpdateReason external_update)
@@ -46,7 +51,8 @@ ActuatorEffectivenessRoverAckermann::getEffectivenessMatrix(Configuration &confi
 
 	configuration.addActuator(ActuatorType::MOTORS, Vector3f{}, Vector3f{1.f, 0.f, 0.f});
 	_motors_mask = 1u << 0;
-	configuration.addActuator(ActuatorType::SERVOS, Vector3f{0.f, 0.f, 1.f}, Vector3f{});
+	//configuration.addActuator(ActuatorType::SERVOS, Vector3f{0.f, 0.f, 1.f}, Vector3f{});
+	_control_surfaces.addActuators(configuration);
 	return true;
 }
 
