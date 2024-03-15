@@ -242,9 +242,17 @@ RoverPositionControl::control_position(const matrix::Vector2d &current_position,
 			const float x_vel = vel(0);
 			const float x_acc = _vehicle_acceleration_sub.get().xyz[0];
 
+			float delta_speed = 0.5;
+			if(_speed < mission_target_speed) {
+				_speed += delta_speed * dt;
+			}
+			_speed = math::min(_speed,mission_target_speed);
+
 			// Compute airspeed control out and just scale it as a constant
+			// mission_throttle = _param_throttle_speed_scaler.get()
+			// 		   * pid_calculate(&_speed_ctrl, mission_target_speed, x_vel, x_acc, dt);
 			mission_throttle = _param_throttle_speed_scaler.get()
-					   * pid_calculate(&_speed_ctrl, mission_target_speed, x_vel, x_acc, dt);
+					   * pid_calculate(&_speed_ctrl, _speed, x_vel, x_acc, dt);
 
 			// Constrain throttle between min and max
 			mission_throttle = math::constrain(mission_throttle, _param_throttle_min.get(), _param_throttle_max.get());
@@ -274,8 +282,11 @@ RoverPositionControl::control_position(const matrix::Vector2d &current_position,
 					_gnd_control.navigate_waypoints(prev_wp_local, curr_wp_local, curr_pos_local, ground_speed_2d);
 
 					_throttle_control = mission_throttle;
+					
+					float ground_speed_r = math::max(ground_speed_2d.norm_squared(), 9.0f);
 
-					float desired_r = ground_speed_2d.norm_squared() / math::abs_t(_gnd_control.nav_lateral_acceleration_demand());
+					//float desired_r = ground_speed_2d.norm_squared() / math::abs_t(_gnd_control.nav_lateral_acceleration_demand());
+					float desired_r = ground_speed_r / math::abs_t(_gnd_control.nav_lateral_acceleration_demand());
 					float desired_theta = (0.5f * M_PI_F) - atan2f(desired_r, _param_wheel_base.get());
 					float control_effort = (desired_theta / _param_max_turn_angle.get()) * sign(
 								       _gnd_control.nav_lateral_acceleration_demand());

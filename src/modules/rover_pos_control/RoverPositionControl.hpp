@@ -169,6 +169,7 @@ private:
 	bool _reset_yaw_sp{true};
 	float _throttle_control{0.f};
 	float _yaw_control{0.f};
+	float _speed{0.f};
 
 	DEFINE_PARAMETERS(
 		(ParamFloat<px4::params::GND_L1_PERIOD>) _param_l1_period,
