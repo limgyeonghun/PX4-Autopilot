@@ -268,7 +268,7 @@ uxrce_dds_ns=""
 if [ "$px4_instance" -ne "0" ]
 then
 	# for multi intances setup, add namespace prefix
-	uxrce_dds_ns="-n px4_$px4_instance"
+	uxrce_dds_ns="-n vehicle$((px4_instance + 1))"
 fi
 if [ -n "$PX4_UXRCE_DDS_NS" ]
 then
