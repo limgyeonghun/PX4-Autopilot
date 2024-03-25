@@ -230,6 +230,10 @@ RoverPositionControl::control_position(const matrix::Vector2d &current_position,
 
 			float mission_target_speed = _param_gndspeed_trim.get();
 
+			if (_control_mode.flag_control_offboard_enabled){
+				_pos_sp_triplet.current.cruising_speed = _trajectory_setpoint.velocity[0];
+			}
+
 			if (PX4_ISFINITE(_pos_sp_triplet.current.cruising_speed) &&
 			    _pos_sp_triplet.current.cruising_speed > 0.1f) {
 				mission_target_speed = _pos_sp_triplet.current.cruising_speed;
@@ -241,7 +245,7 @@ RoverPositionControl::control_position(const matrix::Vector2d &current_position,
 
 			const float x_vel = vel(0);
 			const float x_acc = _vehicle_acceleration_sub.get().xyz[0];
-
+			
 			float delta_speed = 0.5;
 			if(_speed < mission_target_speed) {
 				_speed += delta_speed * dt;
