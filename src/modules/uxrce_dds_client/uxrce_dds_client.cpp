@@ -595,11 +595,11 @@ UxrceddsClient *UxrceddsClient::instantiate(int argc, char *argv[])
 	//const char *client_namespace = nullptr;//"px4";
 
 	int32_t sys_id;
-    param_t sysid_param = param_find("MAV_SYS_ID");
-    param_get(sysid_param, &sys_id);
+	param_t sysid_param = param_find("MAV_SYS_ID");
+	param_get(sysid_param, &sys_id);
 
-    char sys_id_str[50];
-    snprintf(sys_id_str, sizeof(sys_id_str), "vehicle%d", (int)sys_id);
+	char sys_id_str[50];
+	snprintf(sys_id_str, sizeof(sys_id_str), "vehicle%d", (int)sys_id);
 	const char *client_namespace = strdup(sys_id_str);
 
 	while ((ch = px4_getopt(argc, argv, "t:d:b:h:p:lcn:", &myoptind, &myoptarg)) != EOF) {

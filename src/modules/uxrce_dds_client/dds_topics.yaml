@@ -10,18 +10,17 @@ publications:
 
   - topic: /fmu/out/vehicle_local_position
     type: px4_msgs::msg::VehicleLocalPosition
+    rate: 10.
 
   - topic: /fmu/out/piksi_rtk
     type: px4_msgs::msg::PiksiRtk
 
-  - topic: /fmu/out/vehicle_command
-    type: px4_msgs::msg::VehicleCommand
-
   - topic: /fmu/out/monitoring
     type: px4_msgs::msg::Monitoring
+    rate: 1.
 
-  - topic: /fmu/out/vehicle_odometry
-    type: px4_msgs::msg::VehicleOdometry
+  # - topic: /fmu/out/manual_control_setpoint
+  #   type: px4_msgs::msg::ManualControlSetpoint
 
 subscriptions:
 
@@ -30,6 +29,9 @@ subscriptions:
 
   - topic: /fmu/in/offboard_control_mode
     type: px4_msgs::msg::OffboardControlMode
+
+  - topic: /fmu/in/vehicle_command
+    type: px4_msgs::msg::VehicleCommand
 
   - topic: /fmu/in/piksi_data
     type: px4_msgs::msg::PiksiData
