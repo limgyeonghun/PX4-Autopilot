@@ -91,6 +91,7 @@ void LoggedTopics::add_default_topics()
 	add_topic("offboard_control_mode", 100);
 	add_topic("onboard_computer_status", 10);
 	add_topic("parameter_update");
+	add_topic("piksi_rtk");
 	add_topic("position_controller_status", 500);
 	add_topic("position_controller_landing_status", 100);
 	add_topic("position_setpoint_triplet", 200);
@@ -107,7 +108,7 @@ void LoggedTopics::add_default_topics()
 	add_optional_topic("takeoff_status", 1000);
 	add_optional_topic("tecs_status", 200);
 	add_optional_topic("tiltrotor_extra_controls", 100);
-	add_topic("trajectory_setpoint", 200);
+	add_topic("trajectory_setpoint", 10);
 	add_topic("transponder_report");
 	add_topic("vehicle_acceleration", 50);
 	add_topic("vehicle_air_data", 200);

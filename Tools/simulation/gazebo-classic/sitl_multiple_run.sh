@@ -17,8 +17,20 @@ function spawn_model() {
 	N=$2 #Instance Number
 	X=$3
 	Y=$4
-	X=${X:=0.0}
-	Y=${Y:=$((3*${N}))}
+
+	# Y=${Y:=$(( (-9 * N * N) + (15 * N)))}
+	# X=${X:=$(( (3 * N * N) - (9 * N)))}
+	X=${X:=$(((-9 * N)))}
+	Y=${Y:=$(((-9 * N)))}
+	# if [ "$N" -eq 2 ]; then
+	# 	Y=${Y:=$(( 56 * (N-1) ))}
+	# 	X=${X:=$(( 134 * (N-1) ))}
+	# fi
+
+	# if [ "$N" -eq 1 ]; then
+	# 	Y=${Y:=$(( 69 * N ))}
+	# 	X=${X:=$(( 5 * N ))}
+	# fi
 
 	SUPPORTED_MODELS=("iris" "plane" "standard_vtol" "rover" "r1_rover" "typhoon_h480")
 	if [[ " ${SUPPORTED_MODELS[*]} " != *"$MODEL"* ]];
@@ -52,7 +64,7 @@ function spawn_model() {
 
 	echo "Spawning ${MODEL}_${N} at ${X} ${Y}"
 
-	gz model --spawn-file=/tmp/${MODEL}_${N}.sdf --model-name=${MODEL}_${N} -x ${X} -y ${Y} -z 0.83
+	gz model --spawn-file=/tmp/${MODEL}_${N}.sdf --model-name=${MODEL}_${N} -x ${X} -y ${Y} -z 1.2
 
 	popd &>/dev/null
 
@@ -78,10 +90,10 @@ do
 	esac
 done
 
-num_vehicles=${NUM_VEHICLES:=3}
+num_vehicles=${NUM_VEHICLES:=2}
 world=${WORLD:=empty}
 target=${TARGET:=px4_sitl_default}
-vehicle_model=${VEHICLE_MODEL:="iris"}
+vehicle_model=${VEHICLE_MODEL:="rover"}
 export PX4_SIM_MODEL=gazebo-classic_${vehicle_model}
 
 echo ${SCRIPT}
@@ -119,7 +131,7 @@ if [ -z ${SCRIPT} ]; then
 	fi
 
 	while [ $n -lt $num_vehicles ]; do
-		spawn_model ${vehicle_model} $(($n + 1))
+		spawn_model ${vehicle_model} $(($n))
 		n=$(($n + 1))
 	done
 else

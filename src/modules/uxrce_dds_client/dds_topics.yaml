@@ -10,7 +10,13 @@ publications:
 
   - topic: /fmu/out/vehicle_local_position
     type: px4_msgs::msg::VehicleLocalPosition
-    rate: 10.
+    #rate: 2.
+
+  - topic: /fmu/out/vehicle_global_position
+    type: px4_msgs::msg::VehicleGlobalPosition
+
+  - topic: /fmu/out/battery_status
+    type: px4_msgs::msg::BatteryStatus
 
   - topic: /fmu/out/piksi_rtk
     type: px4_msgs::msg::PiksiRtk
@@ -19,8 +25,8 @@ publications:
     type: px4_msgs::msg::Monitoring
     rate: 1.
 
-  # - topic: /fmu/out/manual_control_setpoint
-  #   type: px4_msgs::msg::ManualControlSetpoint
+  - topic: /fmu/out/vehicle_odometry
+    type: px4_msgs::msg::VehicleOdometry
 
 subscriptions:
 

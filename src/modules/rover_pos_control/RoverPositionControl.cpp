@@ -234,10 +234,11 @@ RoverPositionControl::control_position(const matrix::Vector2d &current_position,
 				_pos_sp_triplet.current.cruising_speed = _trajectory_setpoint.velocity[0];
 			}
 
-			if (PX4_ISFINITE(_pos_sp_triplet.current.cruising_speed) &&
-			    _pos_sp_triplet.current.cruising_speed > 0.1f) {
-				mission_target_speed = _pos_sp_triplet.current.cruising_speed;
+			float epsilon = 1e-6f;
+			if (PX4_ISFINITE(_pos_sp_triplet.current.cruising_speed) && fabsf(_pos_sp_triplet.current.cruising_speed + 1.0f) > epsilon) {
+			mission_target_speed = _pos_sp_triplet.current.cruising_speed;
 			}
+
 
 			// Velocity in body frame
 			const Dcmf R_to_body(Quatf(_vehicle_att.q).inversed());
@@ -245,7 +246,7 @@ RoverPositionControl::control_position(const matrix::Vector2d &current_position,
 
 			const float x_vel = vel(0);
 			const float x_acc = _vehicle_acceleration_sub.get().xyz[0];
-			
+
 			float delta_speed = 0.5;
 			if(_speed < mission_target_speed) {
 				_speed += delta_speed * dt;
@@ -286,7 +287,7 @@ RoverPositionControl::control_position(const matrix::Vector2d &current_position,
 					_gnd_control.navigate_waypoints(prev_wp_local, curr_wp_local, curr_pos_local, ground_speed_2d);
 
 					_throttle_control = mission_throttle;
-					
+
 					float ground_speed_r = math::max(ground_speed_2d.norm_squared(), 9.0f);
 
 					//float desired_r = ground_speed_2d.norm_squared() / math::abs_t(_gnd_control.nav_lateral_acceleration_demand());
