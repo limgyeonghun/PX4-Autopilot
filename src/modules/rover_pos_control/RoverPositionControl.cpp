@@ -234,11 +234,15 @@ RoverPositionControl::control_position(const matrix::Vector2d &current_position,
 				_pos_sp_triplet.current.cruising_speed = _trajectory_setpoint.velocity[0];
 			}
 
-			float epsilon = 1e-6f;
-			if (PX4_ISFINITE(_pos_sp_triplet.current.cruising_speed) && fabsf(_pos_sp_triplet.current.cruising_speed + 1.0f) > epsilon) {
-			mission_target_speed = _pos_sp_triplet.current.cruising_speed;
-			}
-
+			// float epsilon = 1e-6f;
+			// if (PX4_ISFINITE(_pos_sp_triplet.current.cruising_speed) && fabsf(_pos_sp_triplet.current.cruising_speed + 1.0f) > epsilon) {
+			// mission_target_speed = _pos_sp_triplet.current.cruising_speed;
+			// }
+			
+			if (PX4_ISFINITE(_pos_sp_triplet.current.cruising_speed) &&
+			    _pos_sp_triplet.current.cruising_speed > 0.1f) {
+				mission_target_speed = _pos_sp_triplet.current.cruising_speed;
+			}			
 
 			// Velocity in body frame
 			const Dcmf R_to_body(Quatf(_vehicle_att.q).inversed());

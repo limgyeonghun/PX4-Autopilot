@@ -279,10 +279,10 @@ namespace monitoring
     {
         hrt_abstime t = hrt_absolute_time();
 
-        PX4_INFO("TOW : %u", _monitoring.tow);             //sitl : %u, fmu-v3 : %lu
+        PX4_INFO("TOW : %lu", _monitoring.tow);             //sitl : %u, fmu-v3 : %lu
         PX4_INFO("Battery : %d", _monitoring.battery);
         PX4_INFO("Position : %.2f, %.2f, %.2f", (double)_monitoring.pos_x, (double)_monitoring.pos_y, (double)_monitoring.pos_z);
-        PX4_INFO("status : %0x:", _monitoring.status1);    //sitl : %0x, fmu-v3 : %0lx
+        PX4_INFO("status : %0lx:", _monitoring.status1);    //sitl : %0x, fmu-v3 : %0lx
         PX4_INFO("RTK flag(%d), sat(%d/%d)", _piksi_rtk.flag, _piksi_rtk.nobs_base, _piksi_rtk.nobs_rover);
         PX4_INFO("Velocity: %.2f, %.2f, %.2f", (double)_local_pos.vx, (double)_local_pos.vy, (double)_local_pos.vz);
         PX4_INFO("Mavlink received time: %.2f", (double)(t - _mavlink_recv_time)/1000000.);

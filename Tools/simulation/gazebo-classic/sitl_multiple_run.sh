@@ -18,19 +18,36 @@ function spawn_model() {
 	X=$3
 	Y=$4
 
-	# Y=${Y:=$(( (-9 * N * N) + (15 * N)))}
-	# X=${X:=$(( (3 * N * N) - (9 * N)))}
-	X=${X:=$(((-9 * N)))}
-	Y=${Y:=$(((-9 * N)))}
-	# if [ "$N" -eq 2 ]; then
-	# 	Y=${Y:=$(( 56 * (N-1) ))}
-	# 	X=${X:=$(( 134 * (N-1) ))}
-	# fi
+	# X=${X:=$(((-9 * N)))}
+	# Y=${Y:=$(((-9 * N)))}
 
-	# if [ "$N" -eq 1 ]; then
-	# 	Y=${Y:=$(( 69 * N ))}
-	# 	X=${X:=$(( 5 * N ))}
-	# fi
+	X_OFFSET=8 #수평
+	Y_OFFSET=4 #수직
+	
+	if [ "$N" -eq 0 ]; then # V1
+		Y=${Y:=0}
+		X=${X:=0}
+	fi
+
+	if [ "$N" -eq 1 ]; then  # V2
+		Y=${Y:=$Y_OFFSET}
+		X=${X:=$((-X_OFFSET * 1))}
+	fi
+
+	if [ "$N" -eq 2 ]; then  # V3
+		Y=${Y:=$((-Y_OFFSET))}
+		X=${X:=$((-X_OFFSET * 1))}
+	fi
+
+	if [ "$N" -eq 3 ]; then  # V4
+		Y=${Y:=0}
+		X=${X:=$((-X_OFFSET * 1))}
+	fi
+
+	if [ "$N" -eq 4 ]; then  # V5
+		Y=${Y:=0}
+		X=${X:=$((-X_OFFSET))}
+	fi
 
 	SUPPORTED_MODELS=("iris" "plane" "standard_vtol" "rover" "r1_rover" "typhoon_h480")
 	if [[ " ${SUPPORTED_MODELS[*]} " != *"$MODEL"* ]];
@@ -90,7 +107,7 @@ do
 	esac
 done
 
-num_vehicles=${NUM_VEHICLES:=2}
+num_vehicles=${NUM_VEHICLES:=4}
 world=${WORLD:=empty}
 target=${TARGET:=px4_sitl_default}
 vehicle_model=${VEHICLE_MODEL:="rover"}

@@ -92,6 +92,7 @@ void LoggedTopics::add_default_topics()
 	add_topic("onboard_computer_status", 10);
 	add_topic("parameter_update");
 	add_topic("piksi_rtk");
+	add_topic("piksi_data");
 	add_topic("position_controller_status", 500);
 	add_topic("position_controller_landing_status", 100);
 	add_topic("position_setpoint_triplet", 200);
@@ -122,8 +123,10 @@ void LoggedTopics::add_default_topics()
 	add_topic("vehicle_global_position", 200);
 	add_topic("vehicle_gps_position", 500);
 	add_topic("vehicle_land_detected");
-	add_topic("vehicle_local_position", 100);
+	add_topic("vehicle_local_position", 10);
 	add_topic("vehicle_local_position_setpoint", 100);
+	add_topic("vehicle_odometry", 10);
+	add_topic("vehicle_visual_odometry");
 	add_topic("vehicle_magnetometer", 200);
 	add_topic("vehicle_rates_setpoint", 20);
 	add_topic("vehicle_roi", 1000);

@@ -10,7 +10,6 @@ publications:
 
   - topic: /fmu/out/vehicle_local_position
     type: px4_msgs::msg::VehicleLocalPosition
-    #rate: 2.
 
   - topic: /fmu/out/vehicle_global_position
     type: px4_msgs::msg::VehicleGlobalPosition
@@ -27,6 +26,8 @@ publications:
 
   - topic: /fmu/out/vehicle_odometry
     type: px4_msgs::msg::VehicleOdometry
+    rate: 5.
+    # for estimate leader position
 
 subscriptions:
 
