@@ -51,8 +51,8 @@ ActuatorEffectivenessRoverAckermann::getEffectivenessMatrix(Configuration &confi
 
 	configuration.addActuator(ActuatorType::MOTORS, Vector3f{}, Vector3f{1.f, 0.f, 0.f});
 	_motors_mask = 1u << 0;
-	//configuration.addActuator(ActuatorType::SERVOS, Vector3f{0.f, 0.f, 1.f}, Vector3f{});
-	_control_surfaces.addActuators(configuration);
+	configuration.addActuator(ActuatorType::SERVOS, Vector3f{0.f, 0.f, 1.f}, Vector3f{});
+	//_control_surfaces.addActuators(configuration);
 	return true;
 }
 
