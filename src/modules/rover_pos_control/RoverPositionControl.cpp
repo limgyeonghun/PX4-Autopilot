@@ -346,8 +346,9 @@ RoverPositionControl::control_position(const matrix::Vector2d &current_position,
 							heading_error += 2.0f * float(M_PI);
 						heading_error = math::constrain(heading_error, float(-M_PI / 4), float(M_PI / 4)); // Constrain heading error within +/-30 degrees
 
+						float vehicle_speed = math::max(ground_speed_2d.norm(), 3.0f);
 						// Calculate the steering angle using the Stanley control formula
-						float steer_angle = heading_error + atan2(k * error_front_axle,  math::max(ground_speed_2d.norm(), 3.0f));
+						float steer_angle = heading_error + (float)atan2(k * error_front_axle, vehicle_speed);
 						steer_angle = math::constrain(steer_angle, -_param_max_turn_angle.get(), _param_max_turn_angle.get()); // Limit the steering angle to the max turn angle
 
 						// _debug_array.data[11] = path_vector(0);
@@ -359,7 +360,7 @@ RoverPositionControl::control_position(const matrix::Vector2d &current_position,
 					{
 						const float desired_heading = _pure_pursuit.calcDesiredHeading(curr_wp_local, prev_wp_local, curr_pos_local,
 																					   math::max(ground_speed_2d.norm(), 3.0f));
-						const float lookahead_distance = pure_pursuit.getLookaheadDistance();
+						const float lookahead_distance = _pure_pursuit.getLookaheadDistance();
 						const float heading_error = matrix::wrap_pi(desired_heading - _local_pos.heading);
 						float desired_steering = atanf((2.0f * _param_wheel_base.get() * sinf(heading_error)) / lookahead_distance);
 
