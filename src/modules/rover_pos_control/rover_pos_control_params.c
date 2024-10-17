@@ -285,3 +285,14 @@ PARAM_DEFINE_FLOAT(GND_MAX_ANG, 0.7854f);
  * @group Rover Position Control
  */
 PARAM_DEFINE_FLOAT(GND_MAN_Y_MAX, 150.0f);
+
+/**
+ * Lateral controller select
+ *
+ * @unit mode
+ * @min 1
+ * @max 3
+ * @decimal 1
+ * @group Rover Position Control
+ */
+PARAM_DEFINE_INT32(GND_LATERAL_MODE, 3);

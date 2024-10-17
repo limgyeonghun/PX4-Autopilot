@@ -262,7 +262,6 @@ RoverPositionControl::control_position(const matrix::Vector2d &current_position,
 			// 		   * pid_calculate(&_speed_ctrl, mission_target_speed, x_vel, x_acc, dt);
 			mission_throttle = _param_throttle_speed_scaler.get()
 					   * pid_calculate(&_speed_ctrl, _speed, x_vel, x_acc, dt);
-
 			// Constrain throttle between min and max
 			mission_throttle = math::constrain(mission_throttle, _param_throttle_min.get(), _param_throttle_max.get());
 
@@ -278,6 +277,11 @@ RoverPositionControl::control_position(const matrix::Vector2d &current_position,
 		float dist_target = get_distance_to_next_waypoint(_global_pos.lat, _global_pos.lon,
 				    (double)curr_wp(0), (double)curr_wp(1)); // pos_sp_triplet.current.lat, pos_sp_triplet.current.lon);
 
+		Vector2f curr_wp_local;
+		Vector2f prev_wp_local;
+
+		int lateral_control_mode = _param_lateral_mode.get();
+
 		switch (_pos_ctrl_state) {
 		case GOTO_WAYPOINT: {
 				if (dist_target < _param_nav_loiter_rad.get()) {
@@ -285,22 +289,86 @@ RoverPositionControl::control_position(const matrix::Vector2d &current_position,
 
 				} else {
 					Vector2f curr_pos_local{_local_pos.x, _local_pos.y};
-					Vector2f curr_wp_local = _global_local_proj_ref.project(curr_wp(0), curr_wp(1));
-					Vector2f prev_wp_local = _global_local_proj_ref.project(prev_wp(0),
-								 prev_wp(1));
-					_gnd_control.navigate_waypoints(prev_wp_local, curr_wp_local, curr_pos_local, ground_speed_2d);
+					curr_wp_local = _global_local_proj_ref.project(curr_wp(0), curr_wp(1));
+					prev_wp_local = _global_local_proj_ref.project(_prev_wp(0), _prev_wp(1));
+
+					strncpy(_debug_array.name, "dbg_array", 10);
+					_debug_array.data[0] = curr_wp(0);
+					_debug_array.data[1] = curr_wp(1);
+					_debug_array.data[2] = _prev_wp(0);
+					_debug_array.data[3] = _prev_wp(1);
+					_debug_array.data[4] = curr_wp_local(0);
+					_debug_array.data[5] = curr_wp_local(1);
+					_debug_array.data[6] = prev_wp_local(0);
+					_debug_array.data[7] = prev_wp_local(1);
+					_debug_array.timestamp = hrt_absolute_time();
 
 					_throttle_control = mission_throttle;
 
-					float ground_speed_r = math::max(ground_speed_2d.norm_squared(), 9.0f);
+					if (lateral_control_mode == 1) // L1 CONTROL
+					{
+						_gnd_control.navigate_waypoints(prev_wp_local, curr_wp_local, curr_pos_local, ground_speed_2d);
+						float ground_speed_r = math::max(ground_speed_2d.norm_squared(), 9.0f);
 
-					//float desired_r = ground_speed_2d.norm_squared() / math::abs_t(_gnd_control.nav_lateral_acceleration_demand());
-					float desired_r = ground_speed_r / math::abs_t(_gnd_control.nav_lateral_acceleration_demand());
-					float desired_theta = (0.5f * M_PI_F) - atan2f(desired_r, _param_wheel_base.get());
-					float control_effort = (desired_theta / _param_max_turn_angle.get()) * sign(
-								       _gnd_control.nav_lateral_acceleration_demand());
-					control_effort = math::constrain(control_effort, -1.0f, 1.0f);
-					_yaw_control = control_effort;
+						//float desired_r = ground_speed_2d.norm_squared() / math::abs_t(_gnd_control.nav_lateral_acceleration_demand());
+						float desired_r = ground_speed_r / math::abs_t(_gnd_control.nav_lateral_acceleration_demand());
+						float desired_theta = (0.5f * M_PI_F) - atan2f(desired_r, _param_wheel_base.get());
+						float control_effort = (desired_theta / _param_max_turn_angle.get()) * sign(
+									       _gnd_control.nav_lateral_acceleration_demand());
+						control_effort = math::constrain(control_effort, -1.0f, 1.0f);
+						_yaw_control = control_effort;
+					}
+					else if (lateral_control_mode == 2) // STANLEY CONTROL
+					{
+						float k = 0.3;
+						float L = 0.3;
+						Vector2f path_vector = curr_wp_local - prev_wp_local;	// Calculate the path vector from previous to current waypoint
+
+						float path_length = path_vector.norm();
+						_debug_array.data[8] = path_length;
+						_debug_array.data[9] = path_vector(0);
+						_debug_array.data[10] = path_vector(1);
+
+						// Calculate the front axle position based on the rover's current position and heading
+						float fx = curr_pos_local(0) + L * float(std::cos(_local_pos.heading));
+						float fy = curr_pos_local(1) + L * float(std::sin(_local_pos.heading));
+
+						// Calculate the cross-track error using the front axle vector
+						Vector2f front_axle_vec(-std::cos(_local_pos.heading + float(M_PI) / 2), -std::sin(_local_pos.heading + float(M_PI) / 2));
+						float error_front_axle = (fx - curr_wp_local(0)) * front_axle_vec(0) + (fy - curr_wp_local(1)) * front_axle_vec(1);
+
+						// Calculate the heading difference between the path and the rover's heading (heading error)
+						float path_heading = atan2f(path_vector(1), path_vector(0)); // Calculate the angle of the path
+						float heading_error = path_heading - _local_pos.heading;	 // Compute the heading error and normalize within [-pi, pi]
+						while (heading_error > float(M_PI))
+							heading_error -= 2.0f * float(M_PI);
+						while (heading_error < -float(M_PI))
+							heading_error += 2.0f * float(M_PI);
+						heading_error = math::constrain(heading_error, float(-M_PI / 4), float(M_PI / 4)); // Constrain heading error within +/-30 degrees
+
+						// Calculate the steering angle using the Stanley control formula
+						float steer_angle = heading_error + atan2(k * error_front_axle,  math::max(ground_speed_2d.norm(), 3.0f));
+						steer_angle = math::constrain(steer_angle, -_param_max_turn_angle.get(), _param_max_turn_angle.get()); // Limit the steering angle to the max turn angle
+
+						// _debug_array.data[11] = path_vector(0);
+						// _debug_array.data[12] = path_vector(1);
+
+						_yaw_control = steer_angle / _param_max_turn_angle.get();
+					}
+					else if (lateral_control_mode == 3) // PURE PURSUIT CONTROL
+					{
+						const float desired_heading = _pure_pursuit.calcDesiredHeading(curr_wp_local, prev_wp_local, curr_pos_local,
+																					   math::max(ground_speed_2d.norm(), 3.0f));
+						const float lookahead_distance = pure_pursuit.getLookaheadDistance();
+						const float heading_error = matrix::wrap_pi(desired_heading - _local_pos.heading);
+						float desired_steering = atanf((2.0f * _param_wheel_base.get() * sinf(heading_error)) / lookahead_distance);
+
+						// Limit steering angle to the max turn angle
+						//desired_steering = math::constrain(desired_steering, -_param_max_turn_angle.get(), _param_max_turn_angle.get());
+						_debug_array.data[12] = desired_steering;
+
+						_yaw_control = desired_steering / _param_max_turn_angle.get();
+					}
 				}
 			}
 			break;
@@ -324,7 +392,17 @@ RoverPositionControl::control_position(const matrix::Vector2d &current_position,
 			break;
 		}
 
-		_prev_wp = curr_wp;
+		Vector2f last_wp_local = _global_local_proj_ref.project(_last_wp(0), _last_wp(1));
+
+		double dist = std::sqrt(std::pow(curr_wp_local(0) - last_wp_local(0), 2) + std::pow(curr_wp_local(1) - last_wp_local(1), 2));
+		if (dist > 0.5)
+		{
+			_prev_wp = _last_wp;
+			_last_wp = curr_wp;
+		}
+		_debug_array.data[12] = dist;
+		// _prev_wp = curr_wp;
+		_debug_array_pub.publish(_debug_array);
 
 	} else {
 		_control_mode_current = UGV_POSCTRL_MODE_OTHER;
@@ -440,6 +518,12 @@ RoverPositionControl::Run()
 				_global_local_proj_ref.reproject(
 					_trajectory_setpoint.position[0], _trajectory_setpoint.position[1],
 					_pos_sp_triplet.current.lat, _pos_sp_triplet.current.lon);
+
+					// strncpy(_debug_vect.name, "dbg_vect", 10);
+					// _debug_vect.x = _pos_sp_triplet.current.lat;
+					// _debug_vect.y = _pos_sp_triplet.current.lon;
+					// _debug_vect.timestamp = hrt_absolute_time();
+					// _debug_vect_pub.publish(_debug_vect);
 
 				_pos_sp_triplet.current.valid = true;
 			}

@@ -46,6 +46,7 @@
 #include <drivers/drv_hrt.h>
 #include <lib/geo/geo.h>
 #include <lib/l1/ECL_L1_Pos_Controller.hpp>
+#include <lib/pure_pursuit/PurePursuit.hpp>
 #include <lib/mathlib/mathlib.h>
 #include <lib/perf/perf_counter.h>
 #include <lib/pid/pid.h>
@@ -74,7 +75,7 @@
 #include <uORB/topics/vehicle_local_position.h>
 #include <uORB/topics/vehicle_thrust_setpoint.h>
 #include <uORB/topics/vehicle_torque_setpoint.h>
-
+#include <uORB/topics/debug_array.h>
 using matrix::Dcmf;
 
 using namespace time_literals;
@@ -117,6 +118,9 @@ private:
 	uORB::Subscription _att_sp_sub{ORB_ID(vehicle_attitude_setpoint)};
 	uORB::Subscription _trajectory_setpoint_sub{ORB_ID(trajectory_setpoint)};
 
+	// debug
+	uORB::Publication<debug_array_s>	_debug_array_pub{ORB_ID(debug_array)};
+
 	manual_control_setpoint_s		_manual_control_setpoint{};			    /**< r/c channel data */
 	position_setpoint_triplet_s		_pos_sp_triplet{};		/**< triplet of mission items */
 	vehicle_attitude_setpoint_s		_att_sp{};			/**< attitude setpoint > */
@@ -124,6 +128,8 @@ private:
 	vehicle_global_position_s		_global_pos{};			/**< global vehicle position */
 	vehicle_local_position_s		_local_pos{};			/**< global vehicle position */
 	vehicle_attitude_s				_vehicle_att{};
+
+	debug_array_s				_debug_array{};
 	trajectory_setpoint_s _trajectory_setpoint{};
 	uORB::Publication<vehicle_thrust_setpoint_s>	_vehicle_thrust_setpoint_pub{ORB_ID(vehicle_thrust_setpoint)};
 	uORB::Publication<vehicle_torque_setpoint_s>	_vehicle_torque_setpoint_pub{ORB_ID(vehicle_torque_setpoint)};
@@ -145,6 +151,7 @@ private:
 	uint8_t _pos_reset_counter{0};		// captures the number of times the estimator has reset the horizontal position
 
 	ECL_L1_Pos_Controller				_gnd_control;
+	PurePursuit 						_pure_pursuit{this};
 
 	enum UGV_POSCTRL_MODE {
 		UGV_POSCTRL_MODE_AUTO,
@@ -159,6 +166,7 @@ private:
 
 	/* previous waypoint */
 	matrix::Vector2d _prev_wp{0, 0};
+	matrix::Vector2d _last_wp{0, 0};
 
 	enum class VelocityFrame {
 		NED,
@@ -180,6 +188,7 @@ private:
 		(ParamFloat<px4::params::GND_SPEED_MAX>) _param_gndspeed_max,
 
 		(ParamInt<px4::params::GND_SP_CTRL_MODE>) _param_speed_control_mode,
+		(ParamInt<px4::params::GND_LATERAL_MODE>) _param_lateral_mode,
 		(ParamFloat<px4::params::GND_SPEED_P>) _param_speed_p,
 		(ParamFloat<px4::params::GND_SPEED_I>) _param_speed_i,
 		(ParamFloat<px4::params::GND_SPEED_D>) _param_speed_d,
